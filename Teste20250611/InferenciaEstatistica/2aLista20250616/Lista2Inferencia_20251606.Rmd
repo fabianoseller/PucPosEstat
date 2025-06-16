@@ -1,0 +1,493 @@
+---
+title:  "Estatística para Ciência de Dados | Lista de Exercício 02 - Propriedades dos Estimadores e Intervalos de Confiança 20251606 [Professora: Ana Carolina Fernandes Dias]"
+author: "Fabiano Antunes"
+date: "2025-06-16"
+Professora: "Ana Carolina Fernandes Dias"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown 
+
+### Construção de Intervalos de Confiança para Proporções
+
+- Para variáveis dicotômicas (ex: satisfeito/insatisfeito), o intervalo de confiança para a proporção populacional é construído usando a proporção amostral e a distribuição normal (quando a amostra é grande o suficiente).
+- Fórmula básica:
+
+$$
+\hat{p} \pm z_{1-\alpha/2} \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}
+$$
+
+
+## Exercício 1
+####  Use as suas próprias palavras para responder às questões a seguir: (3 pts)
+
+a. Um estimador é dito mais eficiente se?.
+b. Como determinamos qual de dois estimadores utilizar através do erro
+quadrático médio?.
+c. Quais são as propriedades da média amostral que fazem com que ele seja
+um bom estimador para a média populacional?.
+
+## Explicação:
+
+a) Ele tiver a menor variância entre todos os estimadores não viesados do mesmo parâmetro. Ou seja, entre estimadores corretos em média, o mais eficiente é aquele que apresenta menor dispersão das estimativas, garantindo maior precisão.
+
+b) Comparamos o erro quadrático médio  de ambos, que combina variância e viés do estimador. O estimador com menor EQM é preferível, pois ele tende a produzir estimativas mais próximas do valor verdadeiro do parâmetro, considerando tanto a precisão quanto a exatidão.
+
+c) Não viesada: a média amostral, em média, é igual à média populacional. 
+  Consistente: conforme o tamanho da amostra aumenta, a média amostral converge para a média verdadeira.
+  Eficiente: entre estimadores não viesados, a média amostral tem a menor variância, oferecendo estimativas mais precisas.
+
+
+
+
+## Exercício 2
+#### Um departamento de recursos humanos de uma empresa deseja estimar a
+proporção de funcionários satisfeitos com o ambiente de trabalho. Eles
+entrevistaram uma amostra aleatória de 300 funcionários e registraram se
+cada um estava satisfeito ou insatisfeito com o ambiente de trabalho.
+Qual método estatístico pode ser utilizado para construir um intervalo de
+valores para a verdadeira proporção de funcionários satisfeitos na
+população?
+
+## Explicação:
+O método Intervalo de Confiança é o método que fornece uma faixa de valores plausíveis para a proporção populacional, considerando a variabilidade amostral e o nível de confiança escolhido
+
+## Exercício 3
+#### Descreva a diferença entre os métodos de estimação: Momentos e máxima
+verossimilhança em termos dos cálculos e da intuição do método?.
+
+## Explicação:
+O método dos momentos estima parâmetros igualando os momentos teóricos (como média e variância) aos momentos calculados da amostra. É simples e direto, usando estatísticas descritivas, mas pode ser menos eficiente, especialmente em amostras pequenas ou com alta variabilidade.
+
+Já o método da máxima verossimilhança busca os parâmetros que maximizam a probabilidade de observar os dados, utilizando toda a informação do modelo probabilístico. Geralmente produz estimativas mais precisas e eficientes, embora o cálculo seja mais complexo, exigindo otimização.
+
+Intuitivamente, o método dos momentos ajusta os parâmetros para que as características básicas da amostra coincidam com as da distribuição teórica, enquanto a máxima verossimilhança procura os parâmetros que tornam os dados observados os mais prováveis.
+
+Em geral, para amostras grandes e baixa variabilidade, ambos os métodos produzem resultados semelhantes. Para amostras pequenas ou alta variabilidade, a máxima verossimilhança é preferível por sua maior eficiência e precisão.
+
+
+## Exercício 4
+#### Qual o estimador de máxima verossimilhança e de momentos para a distribuição Poisson?.
+
+## Explicação:
+#### *O estimador de máxima verossimilhança (EMV) para o parâmetro λλ da distribuição de Poisson é a média amostral dos dados observados. Ou seja, o EMV de λλ é dado por:*
+
+#### *λ^EMV=Xˉ=1n∑i=1nXiλ^EMV=Xˉ=n1i=1∑nXi*
+
+#### *Esse resultado decorre do fato de que a função de verossimilhança da Poisson, ao ser maximizada, leva à média amostral como melhor estimativa para λλ125.*
+
+#### *De forma semelhante, o estimador pelo método dos momentos para λλ na distribuição de Poisson também é a média amostral, pois o primeiro momento teórico da Poisson é igual a λλ, e o método dos momentos consiste em igualar o momento amostral ao momento teórico para obter a estimativa12.*
+
+#### *Portanto, para a distribuição de Poisson, ambos os métodos — máxima verossimilhança e momentos — fornecem o mesmo estimador: a média amostral.*
+
+
+## Exercício 5
+#### Qual a diferença entre uma estimativa pontual e uma estimativa intervalar?
+
+## Explicação:
+
+#### *A estimativa intervalar reconhece a incerteza inerente ao processo amostral, oferecendo uma margem de erro e um grau de confiança, o que torna a inferência mais realista e útil para a tomada de decisão, ao contrário da estimativa pontual que pode ser enganosa por ser apenas um valor isolado. Em resumo:Estimativa pontual = um único valor.*
+*Estimativa intervalar = um intervalo com um nível de confiança que expressa a incerteza da estimativa.*
+*Essa distinção é fundamental para a inferência estatística e para comunicar resultados de forma clara e confiável.*
+
+
+
+
+## Exercício 6
+#### Resumo: Uma escola on-line de idiomas preparatória para o TOEFL afirma possuir uma excelente pontuação média dos seus alunos no exame.  Em uma amostra aleatória de 50 alunos, a pontuação média foi de 560 pontos. Por estudos anteriores, sabe-se que o desvio-padrão é 25 pontos. Obtenha os intervalos de confiança com 90%, 95% e 99% de confiança e calcule a amplitude desses intervalos. Explique porque quanto maior a confiança, maior a amplitude do intervalo.
+
+# Dados fornecidos
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+n <- 50 # tamanho da amostra
+media <- 560 # média amostral
+desvio_padrao <- 25 # desvio padrão conhecido (populacional)
+conf_niveis <- c(0.90, 0.95, 0.99) # níveis de confiança desejados
+```
+
+## Função para calcular intervalo de confiança
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+calc_ic <- function(media, sigma, n, conf) {
+alpha <- 1 - conf
+z <- qnorm(1 - alpha/2) # valor crítico da normal padrão
+erro <- z * (sigma / sqrt(n))
+ic <- c(media - erro, media + erro)
+amplitude <- ic[2] - ic[1]
+return(list(intervalo = ic, amplitude = amplitude))
+}
+```
+
+## Cálculo dos intervalos de confiança e amplitudes
+
+```{r echo=TRUE, warning=TRUE}
+resultados <- lapply(conf_niveis, function(cl) {
+ic <- calc_ic(media, desvio_padrao, n, cl)
+cat(sprintf("Intervalo de Confianca %.0f%%: [%.2f , %.2f] - Amplitude: %.2f\n",
+cl*100, ic$intervalo, ic$intervalo, ic$amplitude))
+return(ic)
+amplitude <- ic[2] - ic[1]
+
+})
+
+```
+
+## Explicação:
+
+#### *Quanto maior o nível de confiança, maior é o valor crítico z, o que aumenta a margem de erro e, consequentemente, a amplitude do intervalo. Isso ocorre porque para termos mais certeza de que o intervalo contém o parâmetro, precisamos considerar uma faixa maior de valores possíveis.*
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+#Função para calcular intervalo de confiança para média com desvio padrão conhecido (z)
+calc_ic <- function(media, sigma, n, conf) {
+alpha <- 1 - conf
+z <- qnorm(1 - alpha/2) # valor crítico da normal padrão
+erro <- z * (sigma / sqrt(n))
+ic <- c(media - erro, media + erro)
+amplitude <- ic - ic # cálculo correto da amplitude
+return(list(intervalo = ic, amplitude = amplitude))
+}
+```
+
+# Calculando e exibindo os intervalos e amplitudes
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+resultados <- lapply(conf_niveis, function(cl) {
+ic <- calc_ic(media, desvio_padrao, n, cl)
+cat(sprintf("Intervalo de Confianca %.0f%%: [%.2f , %.2f] - Amplitude: %.2f\n",
+cl*100, ic$intervalo, ic$intervalo, ic$amplitude))
+return(ic)
+})
+```
+
+```{r}
+n <- 50
+media <- 560
+sigma <- 25
+conf_niveis <- c(0.90, 0.95, 0.99)
+
+for (conf in conf_niveis) {
+  resultado <- calc_ic(media, sigma, n, conf)
+  cat(sprintf("Intervalo de Confianca %.0f%%: [%.2f , %.2f] - Amplitude: %.2f\n",
+              conf*100, resultado$intervalo[1], resultado$intervalo[2], resultado$amplitude))
+}
+
+```
+
+
+## Exercicio 7
+
+### 1 proporção populacional pp de dias violentos 
+
+A proporção populacional pp de dias violentos, ou seja, a fração dos dias em que o número de ocorrências policiais foi maior que 11.
+
+b. Intervalo de confiança (fórmula) a ser utilizado
+
+Como estamos estimando uma proporção, para amostras suficientemente grandes, o intervalo de confiança aproximado para pp com nível de confiança 1−α1−α é dado por:
+
+p^±z1−α/2p^(1−p^)np^±z1−α/2np^(1−p^)
+
+onde:
+
+p^p^ = proporção amostral de dias violentos.
+
+z1−α/2z1−α/2 = valor crítico da distribuição normal padrão (exemplo: 1,96 para 95% de confiança)
+
+nn = tamanho da amostra
+
+c. Suposições necessárias para utilização do intervalo de confiança.
+
+A amostra é aleatória e independente.
+
+O tamanho da amostra é suficientemente grande para que a distribuição da proporção amostral possa ser aproximada por uma normal (regra prática: np^\>5np^\>5 e n(1−p^)\>5n(1−p^)\>5). Os dados são binários (dia violento ou não).
+
+d. Cálculo do intervalo de confiança de 95% e interpretação
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+# Dados fornecidos
+ocorrencias <- c(7,11,8,9,10,14,6,8,8,7,8,10,10,14,12,14,12,9,11,13,13,8,6,8,13,10,14,5,14,10)
+n <- length(ocorrencias)
+
+# Definindo dia violento: ocorrências > 11
+dias_violentos <- sum(ocorrencias > 11)
+
+# Proporção amostral
+p_hat <- dias_violentos / n
+
+# Nível de confiança
+conf <- 0.95
+alpha <- 1 - conf
+z <- qnorm(1 - alpha/2)
+
+# Erro padrão
+erro_padrao <- sqrt(p_hat * (1 - p_hat) / n)
+
+# Intervalo de confiança
+lim_inferior <- p_hat - z * erro_padrao
+lim_superior <- p_hat + z * erro_padrao
+
+cat(sprintf("Proporcao amostral de dias violentos: %.3f\n", p_hat))
+cat(sprintf("Intervalo de Confianca 95%% para a proporcao: [%.3f, %.3f]\n", lim_inferior, lim_superior))
+
+```
+
+## Interpretação:
+
+#### *Com 95% de confiança, o verdadeiro valor da proporção de dias violentos no bairro está entre os limites calculados. Isso significa que, se repetíssemos esse processo muitas vezes, aproximadamente 95% dos intervalos construídos conteriam a verdadeira proporção populacional.*
+
+## Exercicio 7
+
+### 2 Problema: Estimativa do comportamento médio dos scores de crédito a. Parâmetro que estamos estimando
+
+A média populacional do score de crédito, denotada por μμ.
+
+b.Intervalo de confiança (fórmula) a ser utilizado
+
+Como o desvio padrão populacional é desconhecido e a amostra é relativamente pequena, usamos o intervalo de confiança baseado na distribuição t de Student:
+
+xˉ±tn−1,1−α/2×snxˉ±tn−1,1−α/2×ns
+
+onde:
+
+xˉxˉ é a média amostral
+
+ss é o desvio padrão amostral
+
+nn é o tamanho da amostra
+
+tn−1,1−α/2tn−1,1−α/2 é o valor crítico da distribuição t com n−1n−1 graus de liberdade
+
+c.Suposições necessárias para utilização do intervalo de confiança
+
+A amostra é aleatória e independente.
+
+A variável score de crédito segue uma distribuição aproximadamente normal (conforme informado).
+
+O desvio padrão populacional é desconhecido, portanto usamos o desvio padrão amostral.
+
+d. Cálculo do intervalo de confiança de 95% e interpretação
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+# Dados fornecidos
+scores <- c(661, 595, 548, 730, 791, 678, 672, 491, 492, 583, 762, 624, 769, 729, 734, 706)
+
+# Tamanho da amostra
+n <- length(scores)
+
+# Média e desvio padrão amostral
+media <- mean(scores)
+s <- sd(scores)
+
+# Nível de confiança
+conf <- 0.95
+alpha <- 1 - conf
+
+# Valor crítico t para 95% e n-1 graus de liberdade
+t_critico <- qt(1 - alpha/2, df = n - 1)
+
+# Erro padrão da média
+erro_padrao <- s / sqrt(n)
+
+# Margem de erro
+margem_erro <- t_critico * erro_padrao
+
+# Intervalo de confiança
+lim_inferior <- media - margem_erro
+lim_superior <- media + margem_erro
+
+cat(sprintf("Media amostral: %.2f\n", media))
+cat(sprintf("Intervalo de Confianca 95%% para a media do score: [%.2f, %.2f]\n", lim_inferior, lim_superior))
+
+```
+
+## Interpretação:
+
+#### *Com 95% de confiança, o verdadeiro valor da média do score de crédito dos consumidores está dentro do intervalo calculado. Isso significa que se repetíssemos o processo de amostragem várias vezes, aproximadamente 95% dos intervalos construídos conteriam a média real da população. Isso indica o comportamento médio esperado dos scores para os pretendentes a empréstimo para compra de carros.*
+
+
+
+```{r echo=TRUE, warning=TRUE}
+library(ggplot2)
+
+df <- data.frame(score = c(661, 595, 548, 730, 791, 678, 672, 491, 492, 583, 762, 624, 769, 729, 734, 706))
+
+p <- ggplot(df, aes(x = score)) +
+  geom_histogram(binwidth = 40, fill = "steelblue", color = "black", alpha = 0.7) +
+  labs(title = "Distribuição dos Scores de Crédito",
+       x = "Score de Crédito",
+       y = "Frequência") +
+  theme_minimal()
+
+```
+> ## Instalar pacote library.packages("plotly") para ver iteratividade do gráfico, por favor.
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+library(plotly)
+
+ggplotly(p)
+
+```
+
+## Exercícico 7 
+### 3 Análise do IMC
+
+Segue a resolução detalhada para a análise do IMC, considerando que a variável tem distribuição normal e que o desvio padrão populacional é desconhecido (situação comum). Usaremos o intervalo de confiança para a média baseado na distribuição t de Student.
+
+Análise da amostra de IMC a. Parâmetro que estamos estimando.
+
+A média populacional do IMC, denotada por μμ.
+
+b.Intervalo de confiança (fórmula) a ser utilizado
+
+Como o desvio padrão populacional é desconhecido, o intervalo de confiança para a média com nível de confiança 1−α1−α é dado por:
+
+xˉ±tn−1,1−α/2×snxˉ±tn−1,1−α/2×ns
+
+onde:
+
+xˉxˉ = média amostral
+
+ss = desvio padrão amostral
+
+nn = tamanho da amostra
+
+tn−1,1−α/2tn−1,1−α/2 = valor crítico da distribuição t de Student com n−1n−1 graus de liberdade
+
+c. Suposições necessárias
+
+Amostra aleatória e independente.
+
+A variável IMC segue distribuição aproximadamente normal (conforme informado).
+
+Desvio padrão populacional desconhecido, por isso usa-se o desvio padrão amostral e distribuição t.
+
+d.  Cálculo do intervalo de confiança de 95% e interpretação
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+# Dados da amostra de IMC
+imc <- c(19.6, 23.8, 19.6, 29.1, 25.2, 21.4, 22, 27.5, 33.5, 20.6, 29.9, 17.7, 24, 28.9,
+         37.7, 18.3, 19.8, 29.8, 29.7, 31.7, 23.8, 44.9, 19.2, 28.7, 28.5, 19.3, 31, 25.1,
+         22.8, 30.9, 26.5, 21.2, 40.6, 21.9, 26, 23.5, 22.8, 20.7, 20.5, 21.9)
+
+n <- length(imc)
+media <- mean(imc)
+s <- sd(imc)
+conf <- 0.95
+alpha <- 1 - conf
+
+# Valor crítico t para 95% de confiança e n-1 graus de liberdade
+t_critico <- qt(1 - alpha/2, df = n - 1)
+
+# Erro padrão da média
+erro_padrao <- s / sqrt(n)
+
+# Margem de erro
+margem_erro <- t_critico * erro_padrao
+
+# Limites do intervalo de confiança
+lim_inferior <- media - margem_erro
+lim_superior <- media + margem_erro
+
+cat(sprintf("Média amostral do IMC: %.2f\n", media))
+cat(sprintf("Intervalo de Confianca 95%% para a media do IMC: [%.2f, %.2f]\n", lim_inferior, lim_superior))
+
+```
+
+#### *Interpretação: Com 95% de confiança, o verdadeiro valor da média do IMC da população está contido dentro do intervalo calculado. Isso significa que, se repetíssemos o processo de amostragem diversas vezes, aproximadamente 95% dos intervalos construídos conteriam a média real do IMC.*
+
+## Exercício 7
+### 4 Estimativa do tempo médio de reação.
+
+Estimativa do tempo médio de reação a. Parâmetro que estamos estimando
+
+A média populacional do tempo de reação, denotada por μμ.
+
+b.  Intervalo de confiança (fórmula) a ser utilizado
+
+Como o desvio padrão populacional σσ é conhecido, e a amostra tem tamanho n=20n=20, o intervalo de confiança para a média com nível de confiança 1−α1−α é dado por:
+
+xˉ±z1−α/2×σnxˉ±z1−α/2×nσ
+
+onde:
+
+xˉxˉ é a média amostral
+
+z1−α/2z1−α/2 é o valor crítico da distribuição normal padrão
+
+σσ é o desvio padrão populacional
+
+nn é o tamanho da amostra
+
+c.Suposições necessárias
+
+A amostra é aleatória e independente.
+
+O tempo de reação segue uma distribuição normal.
+
+O desvio padrão populacional é conhecido.
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+# Dados da amostra
+tempos <- c(2.9, 3.4, 3.5, 4.1, 4.6, 4.7, 4.5, 3.8, 5.3, 4.9,
+            4.8, 5.7, 5.8, 5.0, 3.4, 5.9, 6.3, 4.6, 5.5, 6.2)
+
+n <- length(tempos)
+media <- mean(tempos)
+sigma <- 2  # desvio padrão populacional conhecido
+conf <- 0.95
+alpha <- 1 - conf
+
+# Valor crítico z para 95% de confiança
+z_critico <- qnorm(1 - alpha/2)
+
+# Erro padrão da média
+erro_padrao <- sigma / sqrt(n)
+
+# Margem de erro
+margem_erro <- z_critico * erro_padrao
+
+# Limites do intervalo de confiança
+lim_inferior <- media - margem_erro
+lim_superior <- media + margem_erro
+
+cat(sprintf("Média amostral do tempo de reação: %.2f minutos\n", media))
+cat(sprintf("Intervalo de Confiança 95%% para a média do tempo de reação: [%.2f, %.2f] minutos\n", lim_inferior, lim_superior))
+
+```
+ 
+## Interpretação:
+
+#### *Com 95% de confiança, o verdadeiro tempo médio de reação dos pacientes ao novo medicamento está dentro do intervalo calculado. Isso significa que, se repetíssemos o processo de amostragem muitas vezes, aproximadamente 95% dos intervalos construídos conteriam o valor real da média populacional.*
+#### *Pelo resultado temos: Intervalo de Confiança 95% para a média do tempo de reação: [3.87, a 5.62] minutos.*
+
+## Gráfico -testes- Dados do tempo de reação:
+
+```{r echo=TRUE, message=TRUE, warning=TRUE}
+# Instalar e carregar o pacote ggplot2, se necessário
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Dados do tempo de reação
+tempos <- c(2.9, 3.4, 3.5, 4.1, 4.6, 4.7, 4.5, 3.8, 5.3, 4.9,
+            4.8, 5.7, 5.8, 5.0, 3.4, 5.9, 6.3, 4.6, 5.5, 6.2)
+
+# Criar um data frame para ggplot2
+df <- data.frame(tempo = tempos)
+
+# Calcular a média amostral
+media_tempo <- mean(df$tempo)
+
+# Criar o histograma com linha da média
+ggplot(df, aes(x = tempo)) +
+  geom_histogram(binwidth = 0.5, fill = "skyblue", color = "black", alpha = 0.7) +
+  geom_vline(aes(xintercept = media_tempo), color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Análise do Tempo Médio de Reação ao Medicamento",
+       x = "Tempo de Reação (minutos)",
+       y = "Frequência") +
+  theme_minimal()
+
+```
+
