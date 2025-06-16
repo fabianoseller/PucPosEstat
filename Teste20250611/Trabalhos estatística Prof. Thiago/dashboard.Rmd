@@ -1,0 +1,355 @@
+---
+title: "Dashboard ENADE 2017"
+author: "Fabiano Antunes, Felipe Magno, Gabriela Araújo"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE, fig.height = 3.5)
+theme_set(theme_minimal(base_size = 12))
+```
+
+```{r warning=FALSE, message=FALSE, include = FALSE}
+Sys.setlocale("LC_ALL", "Portuguese_Brazil.1252")
+```
+
+```{r warning=FALSE, message=FALSE, include = FALSE}
+vetor_pacotes <- c("readr", "ggplot2", "plotly", "e1071", "dplyr", 
+                   "Hmisc", "DescTools", "esquisse", "kableExtra", 
+                   "gridExtra", "devtools", "tidyr", "patchwork", 
+                   "summarytools", "skimr")
+
+pacotes_nao_instalados <- vetor_pacotes[!vetor_pacotes %in% installed.packages()]
+if(length(pacotes_nao_instalados)) {
+  install.packages(pacotes_nao_instalados)
+}
+
+lapply(vetor_pacotes, library, character.only = TRUE)
+```
+
+```{r warning=FALSE, message=FALSE, include =  FALSE}
+enade2017 = read_csv2("MICRODADOS_ENADE_2017.txt")
+microdados_enade_filtrados= enade2017 %>% dplyr::select(CO_GRUPO,
+                                                       TP_SEXO,
+                                                       CO_TURNO_GRADUACAO,
+                                                       CO_REGIAO_CURSO,
+                                                       QE_I02,
+                                                       NT_OBJ_FG,
+                                                       QE_I08,
+                                                       QE_I23,
+                                                       NT_OBJ_CE,
+                                                       NT_GER)
+
+microdados_ti = microdados_enade_filtrados %>% filter(CO_GRUPO==6208)
+
+microdados_ti <- microdados_ti %>%
+  mutate(
+    raca = case_when(
+      QE_I02 == "A" ~ "Branca",
+      QE_I02 == "B" ~ "Preta",
+      QE_I02 == "C" ~ "Amarela",
+      QE_I02 == "D" ~ "Parda",
+      QE_I02 == "E" ~ "Indígena",
+      QE_I02 == "F" ~ "Não declarou"
+    ),
+    regiao = case_when(
+      CO_REGIAO_CURSO == 1 ~ "Norte",
+      CO_REGIAO_CURSO == 2 ~ "Nordeste",
+      CO_REGIAO_CURSO == 3 ~ "Sudeste",
+      CO_REGIAO_CURSO == 4 ~ "Sul",
+      CO_REGIAO_CURSO == 5 ~ "Centro-Oeste"
+    ),
+    sexo = case_when(
+      TP_SEXO == "M" ~ "Masculino",
+      TP_SEXO == "F" ~ "Feminino"
+    ),
+    hestudos = case_when(
+      QE_I23 == "A" ~ "Nenhuma, apenas assisto às aulas",
+      QE_I23 == "B" ~ "De uma a três",
+      QE_I23 == "C" ~ "De quatro a sete",
+      QE_I23 == "D" ~ "De oito a doze",
+      QE_I23 == "E" ~ "Mais de doze"
+    ),
+    hsalario = case_when(
+      QE_I08 == "A" ~ "Até 1,5 SM (até R$ 1.405,50)",
+      QE_I08 == "B" ~ "1,5 a 3 SM (R$ 1.405,51 a R$ 2.811,00)",
+      QE_I08 == "C" ~ "3 a 4,5 SM (R$ 2.811,01 a R$ 4.216,50)",
+      QE_I08 == "D" ~ "4,5 a 6 SM (R$ 4.216,51 a R$ 5.622,00)",
+      QE_I08 == "E" ~ "6 a 10 SM (R$ 5.622,01 a R$ 9.370,00)",
+      QE_I08 == "F" ~ "10 a 30 SM (R$ 9.370,01 a R$ 28.110,00)",
+      QE_I08 == "G" ~ "Acima de 30 SM (mais de R$ 28.110,00)"
+    ),
+    hturno = case_when(
+      CO_TURNO_GRADUACAO == 1 ~ "Matutino",
+      CO_TURNO_GRADUACAO == 2 ~ "Vespertino",
+      CO_TURNO_GRADUACAO == 3 ~ "Noturno",
+      CO_TURNO_GRADUACAO == 4 ~ "Integral",
+      CO_TURNO_GRADUACAO == 5 ~ "Não realizou estágio obrigatório"
+    )
+  )
+
+microdados_ti_sem_NA = microdados_ti %>% na.omit()
+
+cores_raca <- c("Branca" = "#5e3c99", 
+                "Preta" = "#b2abd2", 
+                "Amarela" = "#8073ac", 
+                "Parda" = "#542788", 
+                "Indígena" = "#998ec3", 
+                "Não declarou" = "#c2a5cf")
+```
+
+# Visão Geral 
+
+Column {data-width=6}
+-------------------------------------
+
+### Distribuição Geral das Notas
+```{r echo = FALSE}
+hist(microdados_ti_sem_NA$NT_GER,
+     breaks = 50,
+     col = "#8073ac",
+     border = "white",
+     main = "Distribuição Geral das Notas",
+     xlab = "Nota Geral",
+     ylab = "Frequência")
+```
+
+### Nota média por faixa de renda
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hsalario) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = reorder(hsalario, nota_media), y = nota_media)) +
+  geom_col(fill = "#542788") +
+  coord_flip() +
+  labs(x = "Renda Familiar", y = "Nota Média")
+```
+
+### Nota média por carga horária de estudos
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hestudos) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hestudos, y = nota_media)) +
+  geom_col(fill = "#998ec3") +
+  labs(x = "Horas de Estudo", y = "Nota Média")
+```
+
+Column {data-width=6}
+--------------------------
+
+### Nota média por sexo
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(sexo) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = sexo, y = nota_media)) +
+  geom_col(fill = "#5e3c99") +
+  labs(x = "Sexo", y = "Nota Média")
+```
+
+### Nota média por raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = raca, y = nota_media)) +
+  geom_col(fill = "#8073ac") +
+  labs(x = "Raça", y = "Nota Média")
+```
+
+### Nota média por região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = regiao, y = nota_media)) +
+  geom_col(fill = "#b2abd2") +
+  labs(x = "Região", y = "Nota Média")
+```
+
+# Dados por Raça
+
+Column {data-width = 350}
+-----------------------------
+
+### Nota média por região e raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(regiao, raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = regiao, y = nota_media, fill = raca)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_raca) +
+  labs(x = "Região", y = "Nota Média", fill = "Raça")
+```
+
+### Nota média por turno e raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hturno, raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hturno, y = nota_media, fill = raca)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_raca) +
+  labs(x = "Turno", y = "Nota Média", fill = "Raça") +
+  coord_flip()
+```
+
+Column {data-width = 350}
+-----------------------------
+
+### Nota média por sexo e raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(sexo, raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = sexo, y = nota_media, fill = raca)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_raca) +
+  labs(x = "Sexo", y = "Nota Média", fill = "Raça")
+```
+
+### Nota média por horas de estudo e raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hestudos, raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hestudos, y = nota_media, fill = raca)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_raca) +
+  labs(x = "Horas de Estudo", y = "Nota Média", fill = "Raça") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+```
+
+Column {data-width = 350}
+-----------------------------
+
+### Nota média por faixa de renda e raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hsalario, raca) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hsalario, y = nota_media, fill = raca)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_raca) +
+  labs(x = "Renda Familiar", y = "Nota Média", fill = "Raça") +
+  coord_flip()
+```
+
+### Tabela: Nota Média por Região e Raça
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(regiao, raca) %>%
+  summarise(nota_media = round(mean(NT_GER), 2)) %>%
+  pivot_wider(names_from = raca, values_from = nota_media) %>%
+  kbl(caption = "Nota Média por Região e Raça") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+```
+
+```{r echo = FALSE}
+cores_regiao <- c(
+  "Norte" = "#5e3c99",
+  "Nordeste" = "#8073ac",
+  "Sudeste" = "#998ec3",
+  "Sul" = "#b2abd2",
+  "Centro-Oeste" = "#c2a5cf"
+)
+```
+
+# Dados por Região
+
+Column {data-width = 350}
+-----------------------------
+
+### Nota média por raça e região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(raca, regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = raca, y = nota_media, fill = regiao)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_regiao) +
+  labs(x = "Raça", y = "Nota Média", fill = "Região") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+```
+
+
+### Nota média por turno e região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hturno, regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hturno, y = nota_media, fill = regiao)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_regiao) +
+  labs(x = "Turno", y = "Nota Média", fill = "Região") +
+  coord_flip()
+```
+
+Column {data-width = 350}
+-----------------------------
+
+### Nota média por sexo e região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(sexo, regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = sexo, y = nota_media, fill = regiao)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_regiao) +
+  labs(x = "Sexo", y = "Nota Média", fill = "Região")
+```
+
+### Nota média por faixa de renda e região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hsalario, regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hsalario, y = nota_media, fill = regiao)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_regiao) +
+  labs(x = "Renda Familiar", y = "Nota Média", fill = "Região") +
+  coord_flip()
+```
+
+
+
+Column {data-width = 350}
+-----------------------------
+### Nota média por horas de estudo e região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hestudos, regiao) %>%
+  summarise(nota_media = mean(NT_GER)) %>%
+  ggplot(aes(x = hestudos, y = nota_media, fill = regiao)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = cores_regiao) +
+  labs(x = "Horas de Estudo", y = "Nota Média", fill = "Região") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+```
+
+### Tabela: Nota Média por Renda Familiar e Região
+```{r echo = FALSE}
+microdados_ti_sem_NA %>%
+  group_by(hsalario, regiao) %>%
+  summarise(nota_media = round(mean(NT_GER), 2)) %>%
+  pivot_wider(names_from = regiao, values_from = nota_media) %>%
+  kbl(caption = "Nota Média por Renda Familiar e Região") %>%
+  kable_styling(full_width = TRUE, bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+

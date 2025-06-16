@@ -1,0 +1,334 @@
+---
+title: "Avaliação Final Análise Descritiva e Probabilidade"
+author: "Fabiano Antunes, Felipe Magno, Gabriela Araújo"
+date: "2025-06-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Análise 1: Estatística Descritiva dos dados ENADE 2017
+
+``` {r warning=FALSE, message=FALSE, include = FALSE}
+Sys.setlocale("LC_ALL", "Portuguese_Brazil.1252") #apenas para poder usar acentos
+```
+
+```{r warning=FALSE, message=FALSE, include = FALSE}
+# Instalando e chamando os pacotes necessários
+
+# Lista de pacotes
+vetor_pacotes <- c(
+  "readr", "ggplot2", "plotly", "e1071", "dplyr", 
+  "Hmisc", "DescTools", "esquisse", "kableExtra", 
+  "gridExtra", "devtools", "tidyr", "patchwork", 
+  "summarytools", "skimr"
+)
+
+# Instala somente os pacotes que ainda não estão instalados
+pacotes_nao_instalados <- vetor_pacotes[!vetor_pacotes %in% installed.packages()]
+if(length(pacotes_nao_instalados)) {
+  install.packages(pacotes_nao_instalados)
+}
+
+# Carrega todos os pacotes
+lapply(vetor_pacotes, library, character.only = TRUE)
+
+```
+
+
+### A) Importando os dados ENADE 2017
+```{r warning=FALSE, message=FALSE}
+enade2017 = read_csv2("MICRODADOS_ENADE_2017.txt")
+head(enade2017) #visualizar de forma resumida os dados
+```
+
+
+### B) Selecionando as variáveis indicadas
+```{r }
+microdados_enade_filtrados= enade2017 %>% dplyr::select(CO_GRUPO,
+                                                       TP_SEXO,
+                                                       CO_TURNO_GRADUACAO,
+                                                       CO_REGIAO_CURSO,
+                                                       QE_I02,
+                                                       NT_OBJ_FG,
+                                                       QE_I08,
+                                                       QE_I23,
+                                                       NT_OBJ_CE,
+                                                       NT_GER
+)
+head(microdados_enade_filtrados) #conferindo se o filtro deu certo
+```
+#### Classificando as variáveis
+
+- **NT_OBJ_FG**: Nota bruta na parte objetiva da formação geral — **Variável Quantitativa Contínua**  
+- **CO_GRUPO**: Código da área de enquadramento do curso no Enade — **Variável Qualitativa Nominal**  
+- **CO_REGIAO_CURSO**: Código da região de funcionamento do curso — **Variável Qualitativa Nominal**  
+- **QE_I02**: Questionário de qual cor/raça — **Variável Qualitativa Nominal**  
+- **CO_TURNO_GRADUACAO**: Código do turno de graduação — **Variável Qualitativa Ordinal**  
+- **TP_SEXO**: Tipo de Sexo — **Variável Qualitativa Nominal**  
+- **QE_I08**: Renda familiar — **Variável Qualitativa Ordinal**  
+- **QE_I23**: Horas dedicadas aos estudos — **Variável Qualitativa Ordinal**  
+- **NT_OBJ_CE**: Nota bruta na parte objetiva da formação específica — **Variável Quantitativa Contínua**  
+- **NT_GER**: Nota bruta da prova — **Variável Quantitativa Contínua**  
+
+
+### C)  Filtrando pelo Curso escolhido
+Foi escolhido aleatoriamente o curso 6208 = Engenharia de Produção
+```{r }
+microdados_ti = microdados_enade_filtrados %>% filter(CO_GRUPO==6208)
+head(microdados_ti)
+```
+
+
+### D) Transformando as variáveis
+```{r }
+microdados_ti <- microdados_ti %>%
+  mutate(
+    raca = case_when(
+      QE_I02 == "A" ~ "Branca",
+      QE_I02 == "B" ~ "Preta",
+      QE_I02 == "C" ~ "Amarela",
+      QE_I02 == "D" ~ "Parda",
+      QE_I02 == "E" ~ "Indígena",
+      QE_I02 == "F" ~ "Não declarou"
+    ),
+    regiao = case_when(
+      CO_REGIAO_CURSO == 1 ~ "Norte",
+      CO_REGIAO_CURSO == 2 ~ "Nordeste",
+      CO_REGIAO_CURSO == 3 ~ "Sudeste",
+      CO_REGIAO_CURSO == 4 ~ "Sul",
+      CO_REGIAO_CURSO == 5 ~ "Centro-Oeste"
+    ),
+    sexo = case_when(
+      TP_SEXO == "M" ~ "Masculino",
+      TP_SEXO == "F" ~ "Feminino"
+    ),
+    hestudos = case_when(
+      QE_I23 == "A" ~ "Nenhuma, apenas assisto às aulas",
+      QE_I23 == "B" ~ "De uma a três",
+      QE_I23 == "C" ~ "De quatro a sete",
+      QE_I23 == "D" ~ "De oito a doze",
+      QE_I23 == "E" ~ "Mais de doze"
+    ),
+    hsalario = case_when(
+      QE_I08 == "A" ~ "Até 1,5 SM (até R$ 1.405,50)",
+      QE_I08 == "B" ~ "1,5 a 3 SM (R$ 1.405,51 a R$ 2.811,00)",
+      QE_I08 == "C" ~ "3 a 4,5 SM (R$ 2.811,01 a R$ 4.216,50)",
+      QE_I08 == "D" ~ "4,5 a 6 SM (R$ 4.216,51 a R$ 5.622,00)",
+      QE_I08 == "E" ~ "6 a 10 SM (R$ 5.622,01 a R$ 9.370,00)",
+      QE_I08 == "F" ~ "10 a 30 SM (R$ 9.370,01 a R$ 28.110,00)",
+      QE_I08 == "G" ~ "Acima de 30 SM (mais de R$ 28.110,00)"
+    ),
+    hturno = case_when(
+      CO_TURNO_GRADUACAO == 1 ~ "Matutino",
+      CO_TURNO_GRADUACAO == 2 ~ "Vespertino",
+      CO_TURNO_GRADUACAO == 3 ~ "Noturno",
+      CO_TURNO_GRADUACAO == 4 ~ "Integral",
+      CO_TURNO_GRADUACAO == 5 ~ "Não realizou estágio obrigatório"
+    )
+  )
+
+# Visualização das novas variáveis categóricas
+microdados_ti %>%
+  select(raca, regiao, sexo, hestudos, hsalario, hturno) %>%
+  head(10) %>%
+  kbl(caption = "Exemplo das variáveis transformadas com rótulos") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+### E) Estatísticas Descritivas
+
+``` {r}
+summary(microdados_ti) #padrão para ter um overview das estatísticas do banco 
+``` 
+
+``` {r}
+skim(microdados_ti) #calcula estatísticas básicas ao mesmo tempo que mostra nº de NAs,
+```
+
+O resumo mostra que o dataset tem 25.714 linhas e 16 colunas, com 10 variáveis categóricas e 6 numéricas. Algumas variáveis apresentam até 13% de dados ausentes, especialmente nas notas e características socioeconômicas. Os histogramas indicam que as notas têm distribuição assimétrica, com concentração em torno da média, enquanto CO_TURNO_GRADUACAO se concentra nos valores mais altos.
+
+
+Como mostrado na tabela anterior, apenas as variáveis Sexo e Região não possuem NA's.
+Então é necessário removê-los.
+
+``` {r}
+#Removendo  Na
+microdados_ti_sem_NA = microdados_ti %>% na.omit()
+
+#Conferindo se NA's foram removidos
+resumo_teste_variaveis= microdados_ti_sem_NA %>%
+  select(everything()) %>%
+  summarise_all(list(~sum(is.na(.))))
+ resumo_teste_variaveis
+```
+
+
+### F) Análise do comportamento das notas (NT_GER) de acordo com o Turno
+
+Para essa análise vamos partir das perguntas:
+1. Há indícios de que estudantes de algum dos turnos apresentam desempenho superior aos dos demais? 
+2. E esse padrão se mantém independentemente da região, ou o comportamento varia conforme a localidade?
+
+#### Primeira análise: apenas notas e turnos
+
+``` {r}
+# Resumo estatístico com assimetria e curtose
+ dados_nt_hturno <- microdados_ti_sem_NA %>%
+  select(NT_GER, hturno) %>%
+  group_by(hturno) %>%
+  summarise(
+    quantidade = n(),
+    media = mean(NT_GER),
+    mediana = median(NT_GER),
+    cv = sd(NT_GER) / media * 100,
+    amplitude_interquartil = IQR(NT_GER),
+    assimetria = skewness(NT_GER),
+    curtose = kurtosis(NT_GER)
+  ) %>%
+  arrange(desc(cv))
+
+print( dados_nt_hturno)
+
+# Histograma das notas gerais por turno do curso
+ggplot(microdados_ti_sem_NA, aes(x = NT_GER, fill = hturno)) +
+  geom_histogram(binwidth = 2, color = "black", alpha = 0.7, position = "identity") +
+  ggtitle("Histograma da Nota Geral por Turno") +
+  xlab("Nota Geral") +
+  ylab("Frequência") +
+  facet_grid(~ hturno) +
+  theme_minimal(base_size = 13) +
+  scale_fill_manual(
+    values = c(
+    "Integral" = "#a6c8e0",
+    "Matutino" = "#b2dcb2",
+    "Vespertino" = "#fdd9b5",
+    "Noturno" = "#d2b8e2"
+    ),
+    name = "Turno"
+  )
+
+# Boxplot NT_GER por turno
+ggplot(microdados_ti_sem_NA, aes(x = hturno, y = NT_GER, fill = hturno)) +
+  geom_boxplot(outlier.color = "black", outlier.shape = 21, outlier.fill = "white") +
+  labs(title = "Boxplot da Nota Geral por Turno",
+       x = "Turno",
+       y = "Nota Geral") +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none") +
+  scale_fill_manual(
+    values = c(
+    "Integral" = "#a6c8e0",
+    "Matutino" = "#b2dcb2",
+    "Vespertino" = "#fdd9b5",
+    "Noturno" = "#d2b8e2"
+    )
+  )
+``` 
+
+
+Os dados indicam que os alunos do turno Noturno apresentam o melhor desempenho médio e a menor variabilidade nas notas, com distribuição quase simétrica. O turno Integral, embora mais numeroso, concentra as menores médias e maior assimetria. Matutino e Vespertino têm desempenhos intermediários, sendo o Matutino o mais disperso. Essas diferenças sugerem que fatores externos, como perfil dos estudantes ou estrutura dos cursos, podem influenciar o desempenho conforme o turno.
+
+
+#### Segunda análise: adicionando região na análise de nota e turno
+
+
+```{r}
+# Função para moda (caso necessário em análises futuras)
+Mode <- function(x) { 
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Resumo estatístico com assimetria e curtose, agora por raca
+dados_hturno_regiao <- microdados_ti_sem_NA %>%
+  select(regiao, NT_GER, hturno) %>%
+  group_by(regiao, hturno) %>%
+  summarise(
+    quantidade = n(),
+    media = mean(NT_GER, na.rm = TRUE),
+    mediana = median(NT_GER, na.rm = TRUE),
+    cv = sd(NT_GER, na.rm = TRUE) / media * 100,
+    amplitude_interquartil = IQR(NT_GER, na.rm = TRUE),
+    assimetria = skewness(NT_GER, na.rm = TRUE),
+    curtose = kurtosis(NT_GER, na.rm = TRUE)
+  ) %>%
+  arrange(desc(cv))
+
+# Visualizar tabela (opcional)
+print(dados_hturno_regiao)
+
+
+# Gráfico 1: Boxplot NT_GER por turno e região
+ggplot(microdados_ti_sem_NA, aes(x = hturno, y = NT_GER, fill = hturno)) +
+  geom_boxplot(outlier.color = "black", outlier.shape = 21, outlier.fill = "white") +
+  facet_wrap(~ regiao) +
+  labs(
+    title = "Boxplot da Nota Geral por Turno e Região",
+    x = "Turno",
+    y = "Nota Geral"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)  # rotaciona os rótulos do eixo x
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Integral" = "#a6c8e0",
+      "Matutino" = "#b4dcb2",
+      "Vespertino" = "#fdd9b5",
+      "Noturno" = "#d2b8e2"
+    )
+  )
+
+# Gráfico 2: Histograma com densidade
+ggplot(microdados_ti_sem_NA, aes(x = NT_GER, fill = hturno)) +
+  geom_histogram(aes(y = ..density..), bins = 30, alpha = 0.6, position = "identity", color = "black") +
+  geom_density(alpha = 0.7, color = "black") +
+  facet_wrap(~ regiao) +
+  labs(title = "Distribuição da Nota Geral por Turno e Região",
+       x = "Nota Geral",
+       y = "Densidade") +
+  theme_minimal(base_size = 13) +
+  scale_fill_manual(
+    values = c(
+    "Integral" = "#a6c8e0",
+    "Matutino" = "#b2dcb2",
+    "Vespertino" = "#fdd9b5",
+    "Noturno" = "#d2b8e2"
+    ),
+    name = "Turno"
+  )
+
+
+# Gráfico 3: Barras com assimetria e curtose por grupo
+# Transforma os dados para formato longo para gráfico de barras
+dados_longos <- dados_hturno_regiao %>%
+  select(regiao, hturno, assimetria, curtose) %>%
+  tidyr::pivot_longer(cols = c("assimetria", "curtose"), names_to = "medida", values_to = "valor")
+ggplot(dados_longos, aes(x = interaction(regiao, hturno), y = valor, fill = medida)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Assimetria e Curtose por Região e Turno",
+       x = "Região e Turno",
+       y = "Valor da Medida",
+       fill = "Medida") +
+  theme_minimal(base_size = 13) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(
+    values = c(
+      "assimetria" = "#F4C2C2",  
+      "curtose" = "#A8D5BA"     
+    )
+  )
+```
+
+
+Os dados analisados indicam que há, sim, diferenças de desempenho entre os turnos, mas essas diferenças não são uniformes entre as regiões. Embora o turno noturno apresente médias superiores em alguns contextos, o desempenho dos estudantes varia significativamente de acordo com a localização geográfica. O turno matutino, que à primeira vista poderia ser associado a um melhor desempenho, não se destacou de forma consistente, e o turno integral, apesar de contar com o maior número de estudantes, apresentou médias inferiores em diversas regiões.
+
+Portanto, não é possível afirmar que um turno seja universalmente superior aos demais. O padrão de desempenho está claramente relacionado a características regionais e contextuais.
+
+Além disso, o gráfico de assimetria e curtose reforça essa conclusão ao mostrar que a forma das distribuições das notas varia substancialmente entre turnos e regiões. Enquanto alguns contextos apresentam distribuições mais simétricas ou levemente enviesadas, outros revelam maior assimetria ou curtose negativa. Isso evidencia a ausência de um padrão único de desempenho e destaca a importância de considerar as especificidades regionais e do turno ao analisar os resultados acadêmicos.

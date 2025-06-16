@@ -1,0 +1,219 @@
+---
+title: "Teste "
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+
+```{r}
+vetor_pacotes=c("readr",
+                "ggplot2",
+                "plotly",
+                "e1071",
+                "dplyr",
+                "Hmisc",
+                "DescTools",
+                "esquisse",
+                "kableExtra",
+                "gridExtra",
+                "devtools"
+)
+#install.packages(vetor_pacotes)
+
+lapply(vetor_pacotes,
+       require,
+       character.only = TRUE)
+
+enade2017 = read_csv2("MICRODADOS_ENADE_2017.txt")
+
+
+
+microdados_enade_filtrados= enade2017 %>% dplyr::select(CO_GRUPO,
+                                                       TP_SEXO,
+                                                       CO_TURNO_GRADUACAO,
+                                                       QE_I02,
+                                                       NT_OBJ_FG,
+                                                       QE_I08,
+                                                       QE_I23,
+)
+
+
+microdados_ti = microdados_enade_filtrados %>% filter(CO_GRUPO==6208)
+
+dim (microdados_enade_filtrados)
+
+head(microdados_ti)
+
+
+
+
+# Transformando variáveis - *Transformação de variaveis usando o Mutate (criando coluna nao DataFrame)*(usando case - when)
+
+```{r}
+# Selecionando variaveis
+microdados_enade_filtrados = enade2017 %>% dplyr::select(CO_GRUPO,
+                                                        TP_SEXO,
+                                                        CO_TURNO_GRADUACAO,
+                                                        QE_I02,
+                                                        NT_OBJ_FG,
+                                                        QE_I08,
+                                                        QE_I23,
+                                                        CO_REGIAO_CURSO,
+                                                        NT_OBJ_CE,
+                                                        NT_GER
+)
+
+# The rest of your code for mutating the dataframe follows:
+microdados_ti = microdados_enade_filtrados %>% filter(CO_GRUPO==6208)
+
+microdados_ti = microdados_ti %>% mutate(raca = case_when( QE_I02 == "A" ~ "Branca",
+                                                                    QE_I02 == "B" ~ "Preta",
+                                                                    QE_I02 == "C" ~ "Amarela",
+                                                                    QE_I02 == "D" ~ "Parda",
+                                                                    QE_I02 == "E" ~ "Indígena",
+														                                  			QE_I02 == "E" ~ "Não quero declarar"
+
+))
+
+microdados_ti = microdados_ti %>% mutate(regiao = case_when( CO_REGIAO_CURSO == 1 ~ "Norte",
+                                                             CO_REGIAO_CURSO == 2 ~ "Nordeste",
+                                                             CO_REGIAO_CURSO == 3 ~ "Sudeste",
+                                                             CO_REGIAO_CURSO == 4 ~ "Sul",
+                                                             CO_REGIAO_CURSO == 5 ~ "Centro-Oeste"
+))
+
+#sexo
+microdados_ti = microdados_ti %>% mutate(sexo = case_when( TP_SEXO == "M" ~ "Masculino",
+                                                           TP_SEXO == "F" ~ "Feminino"
+))
+
+microdados_ti = microdados_ti %>% mutate(hestudos = case_when( QE_I23 == "A" ~ "Nenhuma, apenas assisto as aulas",
+                                                               QE_I23 == "B" ~ "De uma a três",
+                                                               QE_I23 == "C" ~ "De quatro a sete",
+                                                               QE_I23 == "D" ~ "De oito a doze",
+                                                               QE_I23 == "E" ~ "Mais de doze"
+))
+
+microdados_ti = microdados_ti %>% mutate(hsalario = case_when(   QE_I08 == "A" ~ "Até 1,5 salário mínimo (até R$ 1.405,50)",
+                                                                 QE_I08 == "B" ~ "De 1,5 a 3 salários mínimos (R$ 1.405,51 a R$ 2.811,00)",
+                                                                 QE_I08 == "C" ~ "De 3 a 4,5 salários mínimos (R$ 2.811,01 a R$ 4.216,50)",
+                                                                 QE_I08 == "D" ~ "De 4,5 a 6 salários mínimos (R$ 4.216,51 a R$ 5.622,00)",
+                                                                 QE_I08 == "E" ~ "De 6 a 10 salários mínimos (R$ 5.622,01 a R$ 9.370,00)",
+                                                                 QE_I08 == "F" ~ "De 10 a 30 salários mínimos (R$ 9.370,01 a R$ 28.110,00)",
+                                                                 QE_I08 == "G" ~ "Acima de 30 salários mínimos (mais de R$ 28.110,00)"
+))
+
+# Corrected variable name from QE_174 to CO_TURNO_GRADUACAO as per selected columns
+microdados_ti = microdados_ti %>% mutate(hturno = case_when(  CO_TURNO_GRADUACAO == 1 ~ "Matutino",
+                                                                CO_TURNO_GRADUACAO == 2 ~ "Vespertino",
+                         									                    	CO_TURNO_GRADUACAO == 3 ~ "Noturno",
+															                                  CO_TURNO_GRADUACAO == 4 ~ "Integral",
+														                                		CO_TURNO_GRADUACAO == 5 ~ "Não realizei estágio curricular obrigatório"
+))
+
+microdados_ti_sem_NA=microdados_ti %>% na.omit()
+
+# linhas que sobraram
+
+dim(microdados_ti)[1] - dim(microdados_ti_sem_NA)[1]
+
+```
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+# Histograma das notas gerais por turno do curso
+library(ggplot2) # Ensure ggplot2 is loaded if not already
+
+# Define the 'dados' variable
+dados = microdados_ti_sem_NA
+
+grafico_histograma_turno = ggplot(microdados_ti, aes(x = NT_GER, fill = hturno)) +
+  geom_histogram(binwidth = 2, color = "black", alpha = 0.7, position = "identity") +
+  ggtitle("Histograma da Nota Geral por Turno do Curso") +
+  xlab("Nota Geral (NT_GER)") +
+  ylab("Frequência Simples") +
+  facet_grid(~hturno) +
+  theme_minimal(base_size = 13) +
+  scale_fill_brewer(palette = "Set2", name = "Turno")
+
+grafico_histograma_turno 
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+g_hist=ggplot(microdados_ti_sem_NA,aes(x=NT_OBJ_CE)) +
+  geom_histogram(color = "black",fill="lightblue",bins =50,aes(y=(..count..)/sum(..count..)))+
+  ggtitle("Histograma da nota dos Alunos Eng de Produção (ENGPROD) ")+
+  xlab("nota") +
+  ylab("Frequência relativa")
+
+g_densidade=ggplot(microdados_ti_sem_NA,aes(x=NT_OBJ_CE))+
+  geom_density(col=2,size = 1, aes(y = 27 * (..count..)/sum(..count..))) +
+  ggtitle("Curva de densidade da nota dos Alunos Eng de Produção") +
+  xlab("Nota dos alunos de ADS") +
+  ylab("Frequência relativa")
+
+g_hist_densidade = ggplot(microdados_ti_sem_NA,aes(x=NT_OBJ_CE)) +
+  geom_histogram(color = "black",fill="lightblue",bins =50,aes(y=(..count..)/sum(..count..)))+
+  geom_density(col=2,size = 1, aes(y = 27 * (..count..)/sum(..count..))) +
+  ggtitle("Histograma e curva de densidade da nota dos Alunos Eng de Produção")+
+  xlab("Nota dos alunos de ADS") +
+  ylab("Frequência relativa")
+
+grid.arrange( g_hist,
+              g_densidade,
+              g_hist_densidade,
+              nrow=3,ncol=1)
+```
+
+### Chart C
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(scales) # Need to import scales for scales::percent_format
+
+# Se já criou a variável com rótulos descritivos:
+# microdados_ti_sem_NA$turno_estagio
+
+# Caso ainda não tenha criado:
+microdados_ti_sem_NA <- microdados_ti_sem_NA %>%
+  # Replace QE_174 with CO_TURNO_GRADUACAO and adjust the cases
+  mutate(turno_estagio = case_when(
+    CO_TURNO_GRADUACAO == 1 ~ "Matutino",
+    CO_TURNO_GRADUACAO == 2 ~ "Vespertino",
+    CO_TURNO_GRADUACAO == 3 ~ "Noturno",
+    CO_TURNO_GRADUACAO == 4 ~ "Integral"
+    # Removed the "Não realizou estágio" case as it does not correspond to CO_TURNO_GRADUACAO values 1-4
+  ))
+
+# Gráfico de barras com frequência relativa
+ggplot(microdados_ti_sem_NA, aes(x = turno_estagio, fill = turno_estagio)) +
+  geom_bar(aes(y = after_stat(count) / sum(after_stat(count))), color = "black", width = 0.7) + # Use after_stat for newer ggplot2 versions
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Distribuição do Turno de Graduação", # Updated title to reflect the variable
+    x = "Turno da Graduação", # Updated x-axis label
+    y = "Frequência Relativa (%)",
+    fill = "Turno"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+```
+
