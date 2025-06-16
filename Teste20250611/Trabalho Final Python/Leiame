@@ -1,1 +1,32 @@
+PUC MINAS
+The Last Markdown Editor, Ever
+[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png Status](https://travis-ci.org/joemccann/dillinger.svg?avis-ci.org/joemccann/dill um editor Markdown em HTML5, compatível com armazenamento offline, pronto para dispositivos móveis e baseado em AngularJS.
 
+Digite Markdown à esquerda
+
+Veja o HTML à direita
+
+✨Magia ✨
+
+Funcionalidades
+Trabalho final
+Data de entrega: 16/06
+
+Objetivo:
+Aplicar os conhecimentos adquiridos ao longo da disciplina por meio da análise de dois conjuntos de dados distintos, utilizando ferramentas de programação, visualização e interpretação estatística.
+
+Instruções Gerais:
+
+A análise de cada banco de dados deve ser realizada em notebooks distintos.
+
+Utilize células em Markdown para descrever cada etapa da análise de forma clara.
+
+Comente o código e utilize docstrings sempre que necessário para explicitar o raciocínio adotado.
+
+Nomeie os arquivos no formato:
+TP_<NúmeroDoBanco>.ipynb
+
+É permitido utilizar uma amostra do banco de dados para otimizar o tempo de execução, desde que o critério de amostragem seja claramente documentado.
+
+Tech
+Docker
