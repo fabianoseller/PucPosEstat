@@ -1,6 +1,6 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
-# faça um resumo dos textos trabalhados nessa lista de perguntas, Lista de Exercícios 2
+#Resumo dos textos trabalhados nessa lista de perguntas, Lista de Exercícios 2
 
 Inferência Estatística
 
